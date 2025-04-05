@@ -19,8 +19,8 @@ def add(name, location):
 @cli.command()
 def list():
     """List all yerba mate brands."""
-    for name, location in registry.list_brands():
-        click.echo(f"- {name} ({location})")
+    for name in registry.list_brands():
+        click.echo(f"- {name}")
 
 @cli.command()
 @click.argument("name")

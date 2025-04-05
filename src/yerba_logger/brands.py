@@ -7,7 +7,7 @@ from importlib.resources import files
 
 class BrandRegistry:
     def __init__(self):
-        self.path = files("yerba_logger.data") / "brands.json"
+        self.path = files("yerba_logger.data") / "yerbas.json"
         self.brands = self._load()
 
     def _load(self):
