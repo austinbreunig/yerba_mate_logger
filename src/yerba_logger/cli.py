@@ -1,5 +1,5 @@
 import click
-from brands import BrandRegistry
+from yerba_logger.brands import BrandRegistry
 
 registry = BrandRegistry()
 

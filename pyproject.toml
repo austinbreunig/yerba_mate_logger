@@ -8,6 +8,7 @@ authors = [
 requires-python = ">=3.8"
 dependencies = [
     "click",
+    "questionary",
     "pandas",
     "matplotlib",
     "seaborn"
@@ -26,3 +27,7 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["yerba_logger"]
+
+[tool.setuptools.package-data]
+yerba_logger = ["data/*.json"]
+

@@ -1,18 +1,21 @@
+import os
 import json
 from pathlib import Path
 from typing import Dict, Any
+import json
+from importlib.resources import files
 
 class BrandRegistry:
-    def __init__(self, path="yerbas.json"):
-        self.path = Path(path)
+    def __init__(self):
+        self.path = files("yerba_logger.data") / "brands.json"
         self.brands = self._load()
 
     def _load(self):
-        if self.path.exists():
-            with open(self.path) as f:
-                return json.load(f)
-        return {}
-
+        if os.path.exists(self.path):
+            return json.loads(self.path.read_text())
+        else:
+            raise FileNotFoundError(f"File {self.path} not found.")
+        
     def save(self):
         with open(self.path, "w") as f:
             json.dump(self.brands, f, indent=2)
@@ -23,3 +26,6 @@ class BrandRegistry:
 
     def get_location(self, name: str):
         return self.brands.get(name)
+
+    def list_brands(self):
+        return self.brands.keys()
