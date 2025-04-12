@@ -29,3 +29,29 @@ class BrandRegistry:
 
     def list_brands(self):
         return self.brands.keys()
+    
+class ProfileRegistry:
+    def __init__(self):
+        self.path = files("yerba_logger.data") / "profiles.json"
+        self.profiles = self._load()
+
+    def _load(self):
+        if os.path.exists(self.path):
+            return json.loads(self.path.read_text())
+        else:
+            raise FileNotFoundError(f"File {self.path} not found.")
+        
+    def save(self):
+        with open(self.path, "w") as f:
+            json.dump(self.profiles, f, indent=2)
+
+    def add_profile(self, name: str, data: Dict[str, Any]):
+        self.profiles[name] = data
+        self.save()
+
+    def get_profile(self, name: str):
+        # return json
+        return self.profiles.get(name)
+    
+    def list_profiles(self):
+        return self.profiles.keys()
