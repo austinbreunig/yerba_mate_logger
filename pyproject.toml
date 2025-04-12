@@ -11,7 +11,8 @@ dependencies = [
     "questionary",
     "pandas",
     "matplotlib",
-    "seaborn"
+    "seaborn",
+    "appdirs",
 ]
 
 [project.scripts]

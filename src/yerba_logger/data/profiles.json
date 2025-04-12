@@ -1,59 +1,58 @@
 {
-    "body": [
-      "Light",
-      "Medium",
-      "Full-bodied"
-    ],
-    "flavor": [
-      "Earthy",
-      "Woody",
-      "Smoky",
-      "Roasted",
-      "Toasted",
-      "Grassy",
-      "Herbal",
-      "Vegetal",
-      "Malty",
-      "Nutty",
-      "Sweet",
-      "Bitter",
-      "Astringent",
-      "Tangy",
-      "Sour",
-      "Citrusy",
-      "Spicy",
-      "Minty",
-      "Floral",
-      "Fruity",
-      "Peppery",
-      "Chocolatey",
-      "Caramel-like"
-    ],
-    "aftertaste": [
-      "Lingering",
-      "Clean finish",
-      "Drying",
-      "Coating",
-      "Refreshing",
-      "Mouth-watering"
-    ],
-    "effects": [
-      "Energizing",
-      "Relaxing",
-      "Uplifting",
-      "Balanced",
-      "Calming",
-      "Focus-enhancing",
-      "Mood-lifting",
-      "Sociable",
-      "Creative", 
-      "Meditative",
-      "Unhinged"
-    ],
-    "cycle": [
-      "Short: < 1 liter",
-      "Medium: 1 liter",
-      "Long: > 1 liters"
-    ]
-  }
-  
+  "body": [
+    "Light",
+    "Medium",
+    "Full-bodied"
+  ],
+  "flavor": [
+    "Earthy",
+    "Woody",
+    "Smoky",
+    "Roasted",
+    "Toasted",
+    "Grassy",
+    "Herbal",
+    "Vegetal",
+    "Malty",
+    "Nutty",
+    "Sweet",
+    "Bitter",
+    "Astringent",
+    "Tangy",
+    "Sour",
+    "Citrusy",
+    "Spicy",
+    "Minty",
+    "Floral",
+    "Fruity",
+    "Peppery",
+    "Chocolatey",
+    "Caramel-like"
+  ],
+  "aftertaste": [
+    "Lingering",
+    "Clean finish",
+    "Drying",
+    "Coating",
+    "Refreshing",
+    "Mouth-watering"
+  ],
+  "effects": [
+    "Energizing",
+    "Relaxing",
+    "Uplifting",
+    "Balanced",
+    "Calming",
+    "Focus-enhancing",
+    "Mood-lifting",
+    "Sociable",
+    "Creative",
+    "Meditative",
+    "Unhinged"
+  ],
+  "cycle": [
+    "Short: < 1 liter",
+    "Medium: 1 liter",
+    "Long: > 1 liters"
+  ]
+}

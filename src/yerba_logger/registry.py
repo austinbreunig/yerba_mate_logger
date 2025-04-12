@@ -4,12 +4,30 @@ from pathlib import Path
 from typing import Dict, Any
 import json
 from importlib.resources import files
+from appdirs import user_data_dir
+
+APP_NAME = "yerba_mate_logger"
+
+def get_user_file(filename: str) -> Path:
+    return Path(user_data_dir(APP_NAME)) / filename
+
+def get_default_resource(filename: str):
+    return files("yerba_logger.data") / filename
+
+def ensure_user_copy(filename: str) -> Path:
+    user_path = get_user_file(filename)
+    user_path.parent.mkdir(parents=True, exist_ok=True)
+    if not user_path.exists():
+        default_data = json.loads(get_default_resource(filename).read_text())
+        with user_path.open("w") as f:
+            json.dump(default_data, f, indent=2)
+    return user_path
 
 class BrandRegistry:
     def __init__(self):
-        self.path = files("yerba_logger.data") / "yerbas.json"
+        self.path = ensure_user_copy("yerbas.json")
         self.brands = self._load()
-
+    
     def _load(self):
         if os.path.exists(self.path):
             return json.loads(self.path.read_text())
@@ -32,8 +50,9 @@ class BrandRegistry:
     
 class ProfileRegistry:
     def __init__(self):
-        self.path = files("yerba_logger.data") / "profiles.json"
+        self.path = ensure_user_copy("profiles.json")
         self.profiles = self._load()
+
 
     def _load(self):
         if os.path.exists(self.path):
@@ -45,9 +64,16 @@ class ProfileRegistry:
         with open(self.path, "w") as f:
             json.dump(self.profiles, f, indent=2)
 
-    def add_profile(self, name: str, data: Dict[str, Any]):
-        self.profiles[name] = data
+    def add_profile(self, name: str, data: str):
+        self.profiles[name].append(data)
         self.save()
+
+    def remove_profile(self, name: str, data: str):
+        if name in self.profiles:
+            self.profiles[name].remove(data)
+            self.save()
+        else:
+            raise KeyError(f"Profile '{name}' not found.")
 
     def get_profile(self, name: str):
         # return json

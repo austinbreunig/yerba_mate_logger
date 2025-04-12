@@ -27,24 +27,92 @@ def cli():
     pass
 
 @cli.command(help="""
-             Add a new yerba mate brand.
+             Add a yerba mate brand or profile value.
              
-             Example: yerba add "Brand Name" "Location"
+             Example: yerba add --type profile .. then follow the prompts
              """)
-@click.argument("name")
-@click.argument("location")
-def add(name, location):
-    BRANDS.add_brand(name, location)
-    click.echo(f"✅ Added {name} from {location}.")
+@click.option(
+    "--type",
+    type=click.Choice(["brand", "profile"], case_sensitive=False),
+    prompt="What are you adding? (brand or profile)"
+)
+def add(type):
+    type = type.lower()
+    try:
+        if type == "brand":
+            name = click.prompt("Enter the brand name")
+            value = click.prompt("Enter the brand location")
+            BRANDS.add_brand(name, value)
+            click.echo(f"✅ Added brand: {name} from {value}")
+        else:
+            name = questionary.select(
+                "Select a profile type:",
+                choices=["body", "flavor", "cycle", "effects"]
+            ).ask()
+            value = click.prompt(f"Enter the {name} profile value")
+            PROFILES.add_profile(name=name, data=value)
+            click.echo(f"✅ Added {name} profile: {value}")
+            
+    except (click.Abort, KeyboardInterrupt):
+        click.echo("\n👋 Exiting.")
+        raise SystemExit
+
+@cli.command(help="""
+                Remove a yerba mate brand or profile value.
+             
+                Example: yerba remove --brand .. then follow the prompts
+             
+                """)
+@click.option(
+    "--type",
+    type=click.Choice(["brand", "profile"], case_sensitive=False),
+    prompt="What are you removing? (brand or profile)"
+)
+def remove(type):
+    type = type.lower()
+    
+    if type == "brand":
+        name = click.prompt("Enter the brand name")
+        BRANDS.remove_brand(name)
+        click.echo(f"✅ Removed brand: {name}")
+    else:
+        name = questionary.select(
+            "Select a profile type:",
+            choices=["body", "flavor", "cycle", "effects"]
+        ).ask()
+        value = click.prompt(f"Enter the {name} profile value")
+        PROFILES.remove_profile(name=name, data=value)
+        click.echo(f"✅ Removed {name} profile: {value}")
+
 
 @cli.command(help="""
              List all available mate brands.
              
              Example: yerba list "Brand Name"
              """)
-def list():
-    for name in BRANDS.list_brands():
-        click.echo(f"- {name}")
+@click.option("--brand", is_flag=True, help="List all yerba mate brands.")
+@click.option("--body", is_flag=True, help="List all yerba mate body profiles.")
+@click.option("--flavor", is_flag=True, help="List all yerba mate taste profiles.")
+@click.option("--cycle", is_flag=True, help="List all yerba mate cycle profiles.")
+@click.option("--effects", is_flag=True, help="List all yerba mate effects.")
+def list(brand, body, flavor, cycle, effects):
+    if brand:
+        for name in BRANDS.list_brands():
+            click.echo(f"- {name}")
+    elif body:
+        for name in PROFILES.get_profile("body"):
+            click.echo(f"- {name}")
+    elif flavor:
+        for name in PROFILES.get_profile("flavor"):
+            click.echo(f"- {name}")
+    elif cycle:
+        for name in PROFILES.get_profile("cycle"):
+            click.echo(f"- {name}")
+    elif effects:
+        for name in PROFILES.get_profile("effects"):
+            click.echo(f"- {name}")
+    else:
+        click.echo("Please specify a category to list.")
 
 @cli.command(help="""
              Get the location of a specific yerba mate brand.
@@ -52,7 +120,7 @@ def list():
              Example: yerba get "Brand Name"
              """)
 @click.argument("name")
-def get(name):
+def get(type, name):
     """Get location of a specific brand."""
     loc = BRANDS.get_location(name)
     if loc:
