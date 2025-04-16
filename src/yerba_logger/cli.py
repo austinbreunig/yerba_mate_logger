@@ -1,9 +1,17 @@
 import click
 import questionary
-from yerba_logger.registry import BrandRegistry, ProfileRegistry
+from yerba_logger.registry import BrandRegistry, ProfileRegistry, WeightRegistry
+from yerba_logger.mate import Mate
+from yerba_logger.utils import (
+    ask_date,
+    ask_body_profile,
+    ask_flavor_profile,
+    ask_effect_profile,
+)
 
 BRANDS = BrandRegistry()
 PROFILES = ProfileRegistry()
+WEIGHTS = WeightRegistry()
 
 @click.group(help="""
              Welcome to the Yerba Mate Logger!
@@ -16,7 +24,7 @@ PROFILES = ProfileRegistry()
              
                 For Logging your yerba mate consumption:
              
-                You can log your smell, taste, and effects of yerba mate. Each property can be rated from 1 to 5.
+                You can log your smell, flavor, and effects of yerba mate. Each property can be rated from 1 to 5.
                 You can also view your logs and get a summary of your yerba mate consumption.
                 
                 Graphs and statistics on consumption are also available.
@@ -60,7 +68,7 @@ def add(type):
 @cli.command(help="""
                 Remove a yerba mate brand or profile value.
              
-                Example: yerba remove --brand .. then follow the prompts
+                Example: yerba remove --> then follow the prompts
              
                 """)
 @click.option(
@@ -92,7 +100,7 @@ def remove(type):
              """)
 @click.option("--brand", is_flag=True, help="List all yerba mate brands.")
 @click.option("--body", is_flag=True, help="List all yerba mate body profiles.")
-@click.option("--flavor", is_flag=True, help="List all yerba mate taste profiles.")
+@click.option("--flavor", is_flag=True, help="List all yerba mate flavor profiles.")
 @click.option("--cycle", is_flag=True, help="List all yerba mate cycle profiles.")
 @click.option("--effects", is_flag=True, help="List all yerba mate effects.")
 def list(brand, body, flavor, cycle, effects):
@@ -129,9 +137,39 @@ def get(type, name):
         click.echo(f"❌ Brand '{name}' not found.")
 
 @cli.command(help="""
+             Set the yerba log weights. These weights are used to calculate the overall score of yerba mate.
+             
+             Example: yerba set_weights --smell 0.2 --flavor 0.3 --energy 0.5
+
+             Ctrl+C to exit at any time.
+             """)
+@click.option("--cycle", type=float, default=0.05, help="Weight for cycle. Value between 0 and 1. Default is 5%.")
+@click.option("--body", type=float, default=0.05, help="Weight for body. Value between 0 and 1. Default is 5%.")
+@click.option("--flavor", type=float, default=0.4, help="Weight for flavor. Value between 0 and 1. Default is 40%.")
+@click.option("--effects", type=float, default=0.5, help="Weight for effects. Value between 0 and 1. Default is 50%.")
+def set_weights(cycle, body, flavor, effects):
+    """Set the yerba log weights."""
+    if cycle + body + flavor + effects != 1:
+        click.echo("❌ The sum of all weights must be equal to 1.")
+        return
+
+    weights = {'cycle':cycle, 'body':body, 'flavor':flavor, 'effects':effects}
+    for name, value in weights.items():
+        WEIGHTS.add_weight(name=name, data=value)
+
+    click.echo(f"✅ Weights set:")
+    click.echo(f"- Cycle: {cycle}")
+    click.echo(f"- Body: {body}")
+    click.echo(f"- Flavor: {flavor}")
+    click.echo(f"- Effects: {effects}")
+
+
+@cli.command(help="""
              Log yerba mate consumption.
              
              Follow the prompts to log your yerba mate consumption!
+
+             Ctrl+C to exit at any time.
              """)
 def log():
     brands = BRANDS.list_brands()
@@ -145,51 +183,52 @@ def log():
     choices=brands
     ).ask()
 
-    date = questionary.text("Enter the date (YYYY-MM-DD):").ask()
-    body = questionary.select(
+    date = ask_date() # asking for date
+
+    gourd_count = int(questionary.text("Enter the number of gourds:").ask()) or 1
+
+    body = int(questionary.select(
         "Rate the body (1-5):",
         choices=["1", "2", "3", "4", "5"]
-    ).ask()
-    body_profile = questionary.checkbox(
-        "Select the body profile:",
-        choices=bodies
-    ).ask()
-    taste = questionary.select(
-        "Rate the taste (1-5):",
+    ).ask())
+    body_profile = ask_body_profile(bodies) # asking for body profile
+
+    flavor = int(questionary.select(
+        "Rate the flavor (1-5):",
         choices=["1", "2", "3", "4", "5"]
-    ).ask()
-    taste_profile = questionary.checkbox(
-        "Select the taste profile:",
-        choices=flavors 
-    ).ask()
-    cycle = questionary.select(
+    ).ask())
+    flavor_profile = ask_flavor_profile(flavors) # asking for flavor profile
+
+    cycle = int(questionary.select(
         "Rate the cycle (1-5):",
         choices=["1", "2", "3", "4", "5"]
-    ).ask()
-    cycle_profile = questionary.checkbox(
-        "Select the cycle profile:",
+    ).ask())
+    cycle_profile = questionary.select(
+        "Select a cycle profile:",
         choices=cycles
-    ).ask()
-    effect = questionary.select(
+    ).ask() # asking for cycle profile
+
+    effect = int(questionary.select(
         "Rate the effects (1-5):",
         choices=["1", "2", "3", "4", "5"]
-    ).ask()
-    effect_category = questionary.checkbox(
-        "Select the effects:",
-        choices=effects
-    ).ask()
+    ).ask())
+    effect_category = ask_effect_profile(effects)
 
-    print(f'You selected the following:')
-    print(f'Brand: {brand}')
-    print(f'Date: {date}')
-    print(f'Body: {body}')
-    print(f'Body Profile: {body_profile}')
-    print(f'Taste: {taste}')
-    print(f'Taste Profile: {taste_profile}')
-    print(f'Cycle: {cycle}')
-    print(f'Cycle Profile: {cycle_profile}')
-    print(f'Effects: {effect}')
-    print(f'Effect Category: {effect_category}')
+    log_df = Mate(
+        date=date,
+        name=brand,
+        location=BRANDS.get_location(brand),
+        gourd_count=gourd_count,
+        body_rank=body,
+        body_profile=body_profile,
+        flavor_rank=flavor,
+        flavor_profile=flavor_profile,
+        cycle_rank=cycle,
+        cycle_profile=cycle_profile,
+        effects_rank=effect,
+        effects_profile=effect_category
+    )
+    click.echo(f"Log Entry: {log_df}")
 
 
 

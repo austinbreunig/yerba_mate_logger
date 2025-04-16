@@ -81,3 +81,25 @@ class ProfileRegistry:
     
     def list_profiles(self):
         return self.profiles.keys()
+    
+class WeightRegistry:
+    def __init__(self):
+        self.path = ensure_user_copy("weights.json")
+        self.weights = self._load()
+
+    def _load(self):
+        if os.path.exists(self.path):
+            return json.loads(self.path.read_text())
+        else:
+            raise FileNotFoundError(f"File {self.path} not found.")
+        
+    def save(self):
+        with open(self.path, "w") as f:
+            json.dump(self.weights, f, indent=2)
+
+    def add_weight(self, name: str, data: str): # in-development
+        self.weights[name] = data
+        self.save()
+
+    def get_weight(self, name: str): # in-development
+        return self.weights.get(name)

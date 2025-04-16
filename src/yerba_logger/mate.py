@@ -1,41 +1,70 @@
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Optional, List, Dict, Any
 import pandas as pd
 import numpy as np
+from yerba_logger.registry import WeightRegistry
 
 @dataclass
 class Mate:
-    name: str
-    location: str
-    smell_rank: Optional[int] = None
-    smell_notes: Optional[str] = None
-    taste_rank: Optional[int] = None
-    taste_notes: Optional[str] = None
-    cycle: Optional[str] = None
-    gourd_count: Optional[int] = None
-    energy_descrip: Optional[str] = None
-    energy_rank: Optional[int] = None
-    energy_notes: Optional[str] = None
-    
+    date: str = field(default=None)
+    name: str = field(default=None)
+    location: str = field(default=None)
+    gourd_count: Optional[int] = field(default=None)
+    body_rank: Optional[int] = field(default=None)
+    body_profile: Optional[list] = field(default=None)
+    flavor_rank: Optional[int] = field(default=None)
+    flavor_profile: Optional[list] = field(default=None)
+    cycle_rank: Optional[str] = field(default=None)
+    cycle_profile: Optional[list] = field(default=None)
+    effects_rank: Optional[str] = field(default=None)
+    effects_profile: Optional[list] = field(default=None)
+    overall_score: Optional[float] = field(init=False)
+    body_weight: Optional[float] = field(init=False)
+    flavor_weight: Optional[float] = field(init=False)
+    cycle_weight: Optional[float] = field(init=False)
+    effects_weight: Optional[float] = field(init=False)
+
+    def __post_init__(self):
+        post_attribs = ['overall_score', 'body_weight', 'flavor_weight', 'cycle_weight', 'effects_weight']
+        # iterate through all attributes and raise error if any of them is None
+        for attr, value in self.__dict__.items():
+            if value is None and attr not in post_attribs:
+                raise ValueError(f"Missing required attribute: {attr}")
+            
+        
+        weights = WeightRegistry()
+        self.body_weight = weights.get_weight("body")
+        self.flavor_weight = weights.get_weight("flavor")
+        self.cycle_weight = weights.get_weight("cycle")
+        self.effects_weight = weights.get_weight("effects")
+
+        processed_df = self.process()
+
+        return processed_df
 
     def process(self):
         # Calculate overall score as a weighted sum of ranks
-        self.overall_score = (self.smell_rank * 0.2 + self.taste_rank * 0.3 + self.energy_rank * 0.5)
+        overall_body_rank = (self.body_rank * self.body_weight)
+        overall_flavor_rank = (self.flavor_rank * self.flavor_weight)
+        overall_cycle_rank = (self.cycle_rank * self.cycle_weight)
+        overall_effects_rank = (self.effects_rank * self.effects_weight)
+        self.overall_score = (overall_body_rank + overall_flavor_rank + overall_cycle_rank + overall_effects_rank)
 
         # create a dictionary of the attributes to be used for DataFrame creation
         data = {
+            'date': self.date,
             'name': self.name,
             'location': self.location,
-            'smell_rank': self.smell_rank,
-            'smell_notes': self.smell_notes,
-            'taste_rank': self.taste_rank,
-            'taste_notes': self.taste_notes,
-            'cycle': self.cycle,
             'gourd_count': self.gourd_count,
-            'energy_descrip': self.energy_descrip,
-            'energy_rank': self.energy_rank,
-            'energy_notes': self.energy_notes,
-            'overall_score': self.overall_score
+            'body_rank': self.body_rank,
+            'body_profile': self.body_profile,
+            'flavor_rank': self.flavor_rank,
+            'flavor_profile': self.flavor_profile,
+            'cycle_rank': self.cycle_rank,
+            'cycle_profile': self.cycle_profile,
+            'effects_rank': self.effects_rank,
+            'effects_profile': self.effects_profile,
+            'overall_score': self.overall_score,
         }
         df = pd.DataFrame([data])
         # Replace NaN values with 0
