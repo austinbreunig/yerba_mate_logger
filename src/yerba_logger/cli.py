@@ -1,6 +1,8 @@
+import os
+import pandas as pd
 import click
 import questionary
-from yerba_logger.registry import BrandRegistry, ProfileRegistry, WeightRegistry
+from yerba_logger.registry import BrandRegistry, ProfileRegistry, WeightRegistry, get_user_file
 from yerba_logger.mate import Mate
 from yerba_logger.utils import (
     ask_date,
@@ -171,7 +173,26 @@ def set_weights(cycle, body, flavor, effects):
 
              Ctrl+C to exit at any time.
              """)
-def log():
+@click.option("--show", is_flag=True, help="Show the yerba log.")
+@click.option("--summary", is_flag=True, help="Show the yerba log summary.")
+def log(show, summary):
+    user_path = get_user_file('yerba_log.csv')
+    if show:
+        if os.path.exists(user_path):
+            df = pd.read_csv(user_path)
+            click.echo(df.head(5))
+        else:
+            click.echo("❌ No yerba log found.")
+        return
+    
+    if summary:
+        if os.path.exists(user_path):
+            df = pd.read_csv(user_path)
+            click.echo(df.describe())
+        else:
+            click.echo("❌ No yerba log found.")
+        return
+    
     brands = BRANDS.list_brands()
     flavors = PROFILES.get_profile("flavor")
     effects = PROFILES.get_profile("effects")
@@ -214,7 +235,12 @@ def log():
     ).ask())
     effect_category = ask_effect_profile(effects)
 
-    log_df = Mate(
+    strength = int(questionary.select(
+        "Rate the strength: (1(Light) - 5(Very Strong))",
+        choices=["1", "2", "3", "4", "5"]
+    ).ask())
+
+    mate = Mate(
         date=date,
         name=brand,
         location=BRANDS.get_location(brand),
@@ -226,9 +252,20 @@ def log():
         cycle_rank=cycle,
         cycle_profile=cycle_profile,
         effects_rank=effect,
-        effects_profile=effect_category
+        effects_profile=effect_category,
+        strength_rank=strength,
     )
+    log_df = mate.process()
     click.echo(f"Log Entry: {log_df}")
+
+    if os.path.exists(user_path):
+        main_df = pd.read_csv(user_path)
+        main_df = pd.concat([main_df, log_df], ignore_index=True).sort_values(by='date', ascending=False)
+
+        main_df.to_csv(user_path, index=False)
+    else:
+        log_df.to_csv(user_path, index=False)
+    click.echo(f"✅ Log entry saved to {user_path}.")
 
 
 

@@ -18,6 +18,7 @@ class Mate:
     cycle_profile: Optional[list] = field(default=None)
     effects_rank: Optional[str] = field(default=None)
     effects_profile: Optional[list] = field(default=None)
+    strength_rank: Optional[str] = field(default=None)
     overall_score: Optional[float] = field(init=False)
     body_weight: Optional[float] = field(init=False)
     flavor_weight: Optional[float] = field(init=False)
@@ -38,16 +39,13 @@ class Mate:
         self.cycle_weight = weights.get_weight("cycle")
         self.effects_weight = weights.get_weight("effects")
 
-        processed_df = self.process()
-
-        return processed_df
 
     def process(self):
         # Calculate overall score as a weighted sum of ranks
         overall_body_rank = (self.body_rank * self.body_weight)
         overall_flavor_rank = (self.flavor_rank * self.flavor_weight)
         overall_cycle_rank = (self.cycle_rank * self.cycle_weight)
-        overall_effects_rank = (self.effects_rank * self.effects_weight)
+        overall_effects_rank = (((self.effects_rank + self.strength_rank) / 2) * self.effects_weight)
         self.overall_score = (overall_body_rank + overall_flavor_rank + overall_cycle_rank + overall_effects_rank)
 
         # create a dictionary of the attributes to be used for DataFrame creation
