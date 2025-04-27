@@ -178,6 +178,7 @@ def set_weights(cycle, body, flavor, effects):
 def log(show, summary):
     user_path = get_user_file('yerba_log.csv')
     if show:
+        click.echo(user_path)
         if os.path.exists(user_path):
             df = pd.read_csv(user_path)
             click.echo(df.head(5))
